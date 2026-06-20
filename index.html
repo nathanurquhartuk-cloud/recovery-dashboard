@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<title>Recovery Dashboard</title>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.5.0/dist/chart.umd.js" integrity="sha384-iU8HYtnGQ8Cy4zl7gbNMOhsDTTKX02BTXptVP/vqAWIaTfM7isw76iyZCsjL2eVi" crossorigin="anonymous"></script>
+<style>
+:root{color-scheme:light;--bg:#f5f7fa;--card:#ffffff;--ink:#1f2933;--muted:#64748b;--line:#e4e9f0;--accent:#2f6f5e;--accent2:#3d7ea6;--good:#2f9e6f;--warn:#d98324;--bad:#c0492f;--chip:#eef3f1}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;line-height:1.5}
+.wrap{max-width:1040px;margin:0 auto;padding:20px 18px 60px}
+h1{font-size:1.45rem;margin:0 0 2px}
+h2{font-size:1.05rem;margin:0 0 14px;letter-spacing:.2px}
+.sub{color:var(--muted);font-size:.85rem;margin:0 0 22px}
+.hero{background:linear-gradient(135deg,#2f6f5e,#3d7ea6);color:#fff;border-radius:18px;padding:26px 24px;margin-bottom:22px;box-shadow:0 8px 26px rgba(47,111,94,.22)}
+.hero .days{font-size:3.6rem;font-weight:800;line-height:1;letter-spacing:-1px}
+.hero .dlabel{font-size:.8rem;text-transform:uppercase;letter-spacing:1.5px;opacity:.85;margin-bottom:6px}
+.hero .meta{margin-top:10px;font-size:.92rem;opacity:.95}
+.hero .bar{height:8px;background:rgba(255,255,255,.25);border-radius:6px;margin-top:14px;overflow:hidden}
+.hero .bar>span{display:block;height:100%;background:#fff;border-radius:6px}
+.hero .mile{font-size:.82rem;opacity:.9;margin-top:7px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-bottom:22px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 17px}
+.stat{font-size:1.9rem;font-weight:700}
+.stat small{font-size:.9rem;color:var(--muted);font-weight:600}
+.klabel{color:var(--muted);font-size:.8rem;text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px}
+.section{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:18px 18px 20px;margin-bottom:18px}
+.chartbox{position:relative;height:260px}
+.actions{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px}
+.act{background:var(--chip);border-radius:10px;padding:11px 12px}
+.act .n{font-size:.82rem;color:var(--muted)}
+.act .v{font-size:1.15rem;font-weight:700;margin-top:3px}
+.act .streak{font-size:.74rem;color:var(--accent);margin-top:2px}
+.entry{border:1px solid var(--line);border-radius:12px;padding:13px 15px;margin-bottom:11px}
+.entry .top{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.entry .date{font-weight:700}
+.pill{display:inline-block;font-size:.72rem;padding:2px 9px;border-radius:999px;background:var(--chip);color:var(--accent);font-weight:600}
+.pill.mood-Great{background:#e2f4ea;color:#1f7a52}.pill.mood-Good{background:#e3eef7;color:#2c6486}.pill.mood-OK{background:#fbf3df;color:#9a6b16}.pill.mood-Low{background:#fbe9da;color:#b5621d}.pill.mood-Struggling{background:#f8e0d9;color:#a83b25}
+.entry .field{font-size:.9rem;margin:5px 0}
+.entry .field b{color:var(--muted);font-weight:600;font-size:.78rem;text-transform:uppercase;letter-spacing:.4px;display:block}
+.alert{background:#fbe9da;border-left:4px solid var(--warn);padding:5px 10px;border-radius:6px;font-size:.86rem}
+.tasktypes{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin-bottom:14px}
+.tt{border-radius:11px;padding:12px 14px;color:#fff}
+.tt.Brief{background:#3d7ea6}.tt.WorldCup{background:#2f9e6f}.tt.Festival{background:#7a5bb0}.tt.Reminder{background:#d98324}
+.tt .c{font-size:1.7rem;font-weight:800;line-height:1}
+.tt .l{font-size:.82rem;opacity:.92}
+.logrow{display:flex;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);font-size:.88rem;align-items:baseline}
+.logrow:last-child{border-bottom:none}
+.logrow .when{color:var(--muted);font-size:.78rem;white-space:nowrap;min-width:92px}
+.logrow .tag{font-size:.7rem;padding:1px 7px;border-radius:999px;background:var(--chip);white-space:nowrap}
+.empty{color:var(--muted);font-size:.9rem;font-style:italic;padding:8px 0}
+.foot{color:var(--muted);font-size:.78rem;text-align:center;margin-top:26px;line-height:1.7}
+.refresh{font-size:.78rem;color:var(--muted)}
+a{color:var(--accent2)}
+@media(max-width:560px){.hero .days{font-size:2.8rem}}
+</style>
+</head>
+<body>
+<!--RECOVERY_DATA_START-->
+<script id="recovery-data" type="application/json">
+{
+  "meta": {
+    "soberDate": "2025-12-12",
+    "generatedAt": "2026-06-19T17:30:00+01:00",
+    "tz": "Europe/London",
+    "name": "Recovery Dashboard"
+  },
+  "recovery": [],
+  "taskLog": []
+}
+</script>
+<!--RECOVERY_DATA_END-->
+
+<div class="wrap">
+  <h1>Recovery Dashboard</h1>
+  <p class="sub" id="subline">Your recovery, tracked over time. <span class="refresh">Auto-updates 4× daily.</span></p>
+
+  <div class="hero">
+    <div class="dlabel">Sober</div>
+    <div class="days"><span id="dayCount">—</span> <span style="font-size:1.3rem;font-weight:600">days</span></div>
+    <div class="meta" id="soberMeta">—</div>
+    <div class="bar"><span id="mileBar" style="width:0%"></span></div>
+    <div class="mile" id="mileText">—</div>
+  </div>
+
+  <div class="grid" id="statGrid"></div>
+
+  <div class="section">
+    <h2>Recovery score over time</h2>
+    <div class="chartbox"><canvas id="scoreChart"></canvas></div>
+  </div>
+
+  <div class="section">
+    <h2>The 7 actions — last 7 days</h2>
+    <div class="actions" id="actionGrid"></div>
+  </div>
+
+  <div class="section">
+    <h2>Mood trend</h2>
+    <div class="chartbox"><canvas id="moodChart"></canvas></div>
+  </div>
+
+  <div class="section">
+    <h2>Recovery journal</h2>
+    <div id="journal"></div>
+  </div>
+
+  <div class="section">
+    <h2>Automation &amp; reporting</h2>
+    <div class="tasktypes" id="taskTypes"></div>
+    <div id="taskLog"></div>
+  </div>
+
+  <div class="foot" id="foot"></div>
+</div>
+
+<script>
+(function(){
+  var data;
+  try { data = JSON.parse(document.getElementById('recovery-data').textContent); }
+  catch(e){ data = {meta:{soberDate:"2025-12-12"},recovery:[],taskLog:[]}; }
+  var rec = (data.recovery||[]).slice().sort(function(a,b){return (a.date||"").localeCompare(b.date||"");});
+  var log = (data.taskLog||[]).slice().sort(function(a,b){return (b.runAt||"").localeCompare(a.runAt||"");});
+  var ACTIONS = [["meeting","Meeting"],["physical","In-person"],["member","Member contact"],["gratitudeDone","Gratitude"],["reading","Reading"],["prayed","Prayed"],["meditated","Meditated"]];
+
+  // --- day count (always live) ---
+  var sober = new Date((data.meta&&data.meta.soberDate)||"2025-12-12");
+  var today = new Date();
+  var elapsed = Math.floor((Date.UTC(today.getFullYear(),today.getMonth(),today.getDate()) - Date.UTC(sober.getFullYear(),sober.getMonth(),sober.getDate()))/86400000);
+  var dayNum = elapsed + 1;
+  document.getElementById('dayCount').textContent = dayNum;
+  var opts={weekday:'short',day:'numeric',month:'short',year:'numeric'};
+  document.getElementById('soberMeta').textContent = "Sober since "+sober.toLocaleDateString('en-GB',opts)+" · "+elapsed+" full days";
+
+  // milestones
+  var miles=[[30,"30 days"],[60,"60 days"],[90,"90 days"],[180,"6 months"],[270,"9 months"],[365,"1 year"],[547,"18 months"],[730,"2 years"],[1095,"3 years"]];
+  var next=null,prev=0;
+  for(var i=0;i<miles.length;i++){ if(elapsed<miles[i][0]){next=miles[i];prev=i>0?miles[i-1][0]:0;break;} }
+  if(next){
+    var span=next[0]-prev, into=elapsed-prev, pct=Math.max(0,Math.min(100,Math.round(into/span*100)));
+    document.getElementById('mileBar').style.width=pct+"%";
+    var md=new Date(sober.getTime()); md.setDate(md.getDate()+next[0]);
+    document.getElementById('mileText').textContent=(next[0]-elapsed)+" days to "+next[1]+" ("+md.toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})+")";
+  } else { document.getElementById('mileBar').style.width="100%"; document.getElementById('mileText').textContent="Past 3 years — incredible."; }
+
+  // --- stat cards ---
+  function scoreOf(r){ if(typeof r.score==='number') return r.score; var s=0; ACTIONS.forEach(function(a){if(r[a[0]])s++;}); return s; }
+  var last7=rec.slice(-7), last30=rec.slice(-30);
+  function avg(arr){ if(!arr.length) return null; var t=0;arr.forEach(function(r){t+=scoreOf(r);});return t/arr.length; }
+  var a7=avg(last7), a30=avg(last30);
+  // physical meeting: days since last
+  var lastPhysical=null; for(var j=rec.length-1;j>=0;j--){ if(rec[j].physical){lastPhysical=rec[j].date;break;} }
+  var daysSincePhysical = lastPhysical? Math.floor((Date.UTC(today.getFullYear(),today.getMonth(),today.getDate())-Date.UTC(new Date(lastPhysical).getFullYear(),new Date(lastPhysical).getMonth(),new Date(lastPhysical).getDate()))/86400000):null;
+  // current logging streak (consecutive days with a record ending most recent)
+  var loggedDays=rec.length;
+  var meetings7=last7.filter(function(r){return r.meeting;}).length;
+  var stat=[
+    ["Days logged", loggedDays, ""],
+    ["7-day avg score", a7!=null?a7.toFixed(1):"—", a7!=null?"/ 7":""],
+    ["30-day avg score", a30!=null?a30.toFixed(1):"—", a30!=null?"/ 7":""],
+    ["Meetings (7d)", meetings7, ""],
+    ["Last in-person", lastPhysical?(daysSincePhysical+"d ago"):"—", ""]
+  ];
+  var sg=document.getElementById('statGrid');
+  stat.forEach(function(s){var d=document.createElement('div');d.className='card';d.innerHTML='<div class="klabel">'+s[0]+'</div><div class="stat">'+s[1]+' <small>'+s[2]+'</small></div>';sg.appendChild(d);});
+
+  // --- action grid (last 7 days completion + current streak) ---
+  var ag=document.getElementById('actionGrid');
+  ACTIONS.forEach(function(a){
+    var done7=last7.filter(function(r){return r[a[0]];}).length;
+    var streak=0; for(var k=rec.length-1;k>=0;k--){ if(rec[k][a[0]])streak++; else break; }
+    var d=document.createElement('div');d.className='act';
+    d.innerHTML='<div class="n">'+a[1]+'</div><div class="v">'+done7+'<span style="font-size:.8rem;color:var(--muted)">/7</span></div>'+(streak>1?'<div class="streak">🔥 '+streak+'-day streak</div>':'<div class="streak">&nbsp;</div>');
+    ag.appendChild(d);
+  });
+
+  // --- charts ---
+  function labels(arr){return arr.map(function(r){return (r.date||"").slice(5);});}
+  if(window.Chart && rec.length){
+    new Chart(document.getElementById('scoreChart'),{type:'line',data:{labels:labels(rec.slice(-30)),datasets:[{label:'Recovery score',data:rec.slice(-30).map(scoreOf),borderColor:'#2f6f5e',backgroundColor:'rgba(47,111,94,.12)',fill:true,tension:.3,pointRadius:3}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:0,max:7,ticks:{stepSize:1}}},plugins:{legend:{display:false}}}});
+    var moodMap={Struggling:1,Low:2,OK:3,Good:4,Great:5};
+    var moodRec=rec.filter(function(r){return r.mood;}).slice(-30);
+    if(moodRec.length){
+      new Chart(document.getElementById('moodChart'),{type:'line',data:{labels:labels(moodRec),datasets:[{label:'Mood',data:moodRec.map(function(r){return moodMap[r.mood]||null;}),borderColor:'#3d7ea6',backgroundColor:'rgba(61,126,166,.12)',fill:true,tension:.3,pointRadius:3,spanGaps:true}]},options:{responsive:true,maintainAspectRatio:false,scales:{y:{min:1,max:5,ticks:{stepSize:1,callback:function(v){return({1:'Struggling',2:'Low',3:'OK',4:'Good',5:'Great'})[v]||'';}}}},plugins:{legend:{display:false}}}});
+    } else { document.getElementById('moodChart').parentNode.innerHTML='<div class="empty">No mood data logged yet.</div>'; }
+  } else {
+    document.getElementById('scoreChart').parentNode.innerHTML='<div class="empty">No daily entries logged yet — your nightly inventory fills this in. The chart appears once you have logged days.</div>';
+    document.getElementById('moodChart').parentNode.innerHTML='<div class="empty">No mood data yet.</div>';
+  }
+
+  // --- journal ---
+  var jr=document.getElementById('journal');
+  if(rec.length){
+    rec.slice().reverse().slice(0,30).forEach(function(r){
+      var e=document.createElement('div');e.className='entry';
+      var h='<div class="top"><span class="date">'+(r.date||'')+(r.soberDay?' · Day '+r.soberDay:'')+'</span>';
+      h+='<span>'+(r.mood?'<span class="pill mood-'+r.mood+'">'+r.mood+'</span> ':'')+'<span class="pill">'+scoreOf(r)+'/7</span></span></div>';
+      var dn=[];ACTIONS.forEach(function(a){if(r[a[0]])dn.push(a[1]);});
+      h+='<div class="field"><b>Actions</b>'+(dn.length?dn.join(' · '):'—')+'</div>';
+      if(r.gratitude) h+='<div class="field"><b>Gratitude</b>'+esc(r.gratitude)+'</div>';
+      if(r.inventory) h+='<div class="field"><b>Inventory</b>'+esc(r.inventory)+'</div>';
+      if(r.resentments) h+='<div class="field"><b>Resentments / fears</b>'+esc(r.resentments)+'</div>';
+      if(r.amends) h+='<div class="field"><b>Amends needed</b>'+esc(r.amends)+'</div>';
+      if(r.alert) h+='<div class="alert">⚠️ '+esc(r.alert)+'</div>';
+      e.innerHTML=h;jr.appendChild(e);
+    });
+  } else { jr.innerHTML='<div class="empty">No journal entries yet. Your 9pm inventory will start filling this in tonight.</div>'; }
+
+  // --- task reporting ---
+  var byType={Brief:0,"World Cup":0,Festival:0,Reminder:0};
+  log.forEach(function(l){ if(byType[l.type]!=null) byType[l.type]++; });
+  var tt=document.getElementById('taskTypes');
+  [["Brief","Brief"],["World Cup","WorldCup"],["Festival","Festival"],["Reminder","Reminder"]].forEach(function(t){
+    var d=document.createElement('div');d.className='tt '+t[1];
+    d.innerHTML='<div class="c">'+(byType[t[0]]||0)+'</div><div class="l">'+t[0]+' runs</div>';tt.appendChild(d);
+  });
+  var tl=document.getElementById('taskLog');
+  if(log.length){
+    log.slice(0,25).forEach(function(l){
+      var d=document.createElement('div');d.className='logrow';
+      var when=l.runAt?new Date(l.runAt).toLocaleString('en-GB',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}):'';
+      d.innerHTML='<span class="when">'+when+'</span><span class="tag">'+(l.task||l.type||'')+'</span><span>'+esc(l.summary||'')+(l.texted?' 📲':'')+'</span>';
+      tl.appendChild(d);
+    });
+  } else { tl.innerHTML='<div class="empty">No automation runs logged yet — entries appear here as your scheduled tasks run.</div>'; }
+
+  // --- footer ---
+  var gen=(data.meta&&data.meta.generatedAt)?new Date(data.meta.generatedAt):new Date();
+  document.getElementById('foot').innerHTML='Last rebuilt '+gen.toLocaleString('en-GB',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})+' · auto-updates at 6am, 12pm, 6pm & 9:45pm.<br>Private personal recovery dashboard. Not a substitute for your sponsor, meetings, or professional support.';
+
+  function esc(s){return String(s).replace(/[&<>]/g,function(c){return({'&':'&amp;','<':'&lt;','>':'&gt;'})[c];});}
+})();
+</script>
+</body>
+</html>
